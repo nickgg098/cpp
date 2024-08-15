@@ -164,6 +164,92 @@ void levelOrder(Node* root) {
     }
 }
 
+// Utility function to find the node with the minimum key value
+Node* minValueNode(Node* node) {
+    Node* current = node;
+
+    // Loop down to find the leftmost leaf
+    while (current->left != nullptr)
+        current = current->left;
+
+    return current;
+}
+
+// Recursive function to delete a node with a given key
+// from the subtree rooted with the given node.
+Node* deleteNode(Node* root, int key) {
+    // 1. Perform the normal BST deletion
+    if (root == nullptr)
+        return root;
+
+    if (key < root->key)
+        root->left = deleteNode(root->left, key);
+
+    else if (key > root->key)
+        root->right = deleteNode(root->right, key);
+
+    else {
+        // node with only one child or no child
+        if ((root->left == nullptr) || (root->right == nullptr)) {
+            Node* temp = root->left ? root->left : root->right;
+
+            // No child case
+            if (temp == nullptr) {
+                temp = root;
+                root = nullptr;
+            } else // One child case
+                *root = *temp; // Copy the contents of the non-empty child
+
+            delete temp;
+        } else {
+            // node with two children: Get the inorder successor (smallest
+            // in the right subtree)
+            Node* temp = minValueNode(root->right);
+
+            // Copy the inorder successor's data to this node
+            root->key = temp->key;
+
+            // Delete the inorder successor
+            root->right = deleteNode(root->right, temp->key);
+        }
+    }
+
+    // If the tree had only one node then return
+    if (root == nullptr)
+        return root;
+
+    // 2. Update height of the current node
+    root->height = 1 + max(height(root->left), height(root->right));
+
+    // 3. Get the balance factor of this node (to check whether
+    // this node became unbalanced)
+    int balance = getBalance(root);
+
+    // If this node becomes unbalanced, then there are 4 cases
+
+    // Left Left Case
+    if (balance > 1 && getBalance(root->left) >= 0)
+        return rightRotate(root);
+
+    // Left Right Case
+    if (balance > 1 && getBalance(root->left) < 0) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+
+    // Right Right Case
+    if (balance < -1 && getBalance(root->right) <= 0)
+        return leftRotate(root);
+
+    // Right Left Case
+    if (balance < -1 && getBalance(root->right) > 0) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+
+    return root;
+}
+
 int main() {
     Node* root = nullptr;
 
